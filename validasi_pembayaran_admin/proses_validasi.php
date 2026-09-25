@@ -22,7 +22,7 @@ if (isset($_GET['id']) && isset($_GET['aksi'])) {
         // Jika ditolak, kembalikan status menjadi Batal atau Belum Bayar
         $update = mysqli_query($db, "UPDATE transaksi SET status_transaksi = 'Batal' WHERE id_transaksi = '$id_transaksi'");
         if ($update) {
-            echo "<script>alert('Pembayaran ditolak!'); window.location.href='validasi_pembayaran.php';</script>";
+            echo "<script>alert('Pembayaran ditolak!'); window.location.href='../validasi_pembayaran_admin';</script>";
         }
     }
 }

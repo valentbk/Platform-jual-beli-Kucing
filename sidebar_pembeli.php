@@ -9,39 +9,31 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="../katalog_kucing_pembeli" class="nav-link <?php if ($halaman == 'katalog_kucing') {echo 'active';}?>">
-              <i class="nav-icon fas fa-users-cog"></i>
-              <p>
-                Katalog Kucing Saya
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="../pesanan_penjual" class="nav-link <?php if ($halaman == 'pesanan_masuk') {echo 'active';}?>">
+            <a href="../katalog_pembeli" class="nav-link <?php if ($halaman == 'katalog') {echo 'active';}?>">
               <i class="nav-icon fas fa-cat"></i>
               <p>
-                Pesanan
+                Katalog Kucing
               </p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="../data_rekekning_pembeli" class="nav-link <?php if ($halaman == 'data_rekening') {echo 'active';}?>">
-              <i class="nav-icon fas fa-cat"></i>
+            <a href="../pesanan_saya_pembeli" class="nav-link <?php if ($halaman == 'pesanan_saya') {echo 'active';}?>">
+              <i class="nav-icon fas fa-shopping-cart"></i>
               <p>
-                Data Rekening Saya
+                Pesanan Saya
               </p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="../tarik_dana_pembeli" class="nav-link <?php if ($halaman == 'tarik_dana') {echo 'active';}?>">
-              <i class="nav-icon fas fa-exchange-alt"></i>
+            <a href="../profil_pembeli" class="nav-link <?php if ($halaman == 'profil') {echo 'active';}?>">
+              <i class="nav-icon fas fa-users"></i>
               <p>
-                Tarik Dana
+                Profil Saya
               </p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="../ganti_password_superadmin" class="nav-link <?php if ($halaman == 'ganti_pw') {echo 'active';}?>">
+            <a href="../ganti_password_pembeli" class="nav-link <?php if ($halaman == 'ganti_pw') {echo 'active';}?>">
               <i class="nav-icon fas fa-lock"></i>
               <p>
                 Ganti Password

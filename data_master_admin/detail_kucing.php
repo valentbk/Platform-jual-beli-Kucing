@@ -1,8 +1,7 @@
 <?php
 require_once '../database/koneksi.php';
 
-$halaman = 'katalog_kucing';
-$id_penjual = $_SESSION['id_user'] ?? '';
+$halaman = 'data_master';
 
 // Cek apakah ada parameter nama_kucing di URL
 if (!isset($_GET['nama_kucing'])) {
@@ -12,13 +11,13 @@ if (!isset($_GET['nama_kucing'])) {
 
 $nama_kucing_get = mysqli_real_escape_string($db, $_GET['nama_kucing']);
 
-// Mengambil data kucing khusus milik penjual ini
-$query_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE nama_kucing = '$nama_kucing_get' AND id_penjual = '$id_penjual'");
+// Mengambil data kucing BEBAS untuk Admin (tanpa filter id_penjual)
+$query_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE nama_kucing = '$nama_kucing_get'");
 $data = mysqli_fetch_assoc($query_kucing);
 
-// Jika data tidak ditemukan (atau mencoba akses kucing orang lain)
+// Jika data tidak ditemukan di tabel kucing
 if (!$data) {
-    echo '<script>alert("Data tidak ditemukan atau bukan milik Anda!"); window.location.href="index.php"</script>';
+    echo '<script>alert("Data kucing tidak ditemukan di database!"); window.location.href="index.php"</script>';
     exit;
 }
 
@@ -32,7 +31,7 @@ $nama_ras = $d_ras['nama_ras'] ?? 'Lainnya';
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Detail Kucing - MeowMart</title>
+  <title>Detail Kucing - MeowMart (Admin)</title>
 
 <?php include '../library.php'; ?>
 </head>
@@ -49,7 +48,7 @@ $nama_ras = $d_ras['nama_ras'] ?? 'Lainnya';
     <ul class="navbar-nav ml-auto">
       <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#">
-          Hallo, <?= $_SESSION['nama'] ?? 'Penjual'; ?> <i class="far fa-user"></i>
+          Hallo, <?= $_SESSION['nama'] ?? 'Admin'; ?> <i class="far fa-user"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
           <div class="dropdown-divider"></div>
@@ -128,7 +127,7 @@ $nama_ras = $d_ras['nama_ras'] ?? 'Lainnya';
                   <?= nl2br($data['deskripsi']); ?>
                 </p>
 
-                <a href="index.php" class="btn btn-secondary btn-block mt-4"><b><i class="fas fa-arrow-left"></i> Kembali ke Katalog</b></a>
+                <a href="index.php" class="btn btn-secondary btn-block mt-4"><b><i class="fas fa-arrow-left"></i> Kembali ke Data Kucing</b></a>
               </div>
             </div>
           </div>
@@ -141,7 +140,6 @@ $nama_ras = $d_ras['nama_ras'] ?? 'Lainnya';
               </div>
               <div class="card-body text-center">
                 <?php if (!empty($data['file_kesehatan'])): ?>
-                    <!-- Sesuaikan path folder PDF milik AdminLTE-mu. Contoh ini asumsikan folder admin ada di luar folder penjual -->
                     <?php $pdf_path = "pdf/" . $data['file_kesehatan']; ?>
                     
                     <embed src="<?= $pdf_path; ?>" type="application/pdf" width="100%" height="450px" />

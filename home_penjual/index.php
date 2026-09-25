@@ -1,15 +1,14 @@
 <?php
 require_once '../database/koneksi.php';
 
-// Pengecekan Authority (Hanya Penjual yang boleh akses)
-$peran = $_SESSION['role'] ?? '';
-if ($peran != 'PJ') {
+$peran = trim($_SESSION['role'] ?? '');
+
+$peran = $_SESSION['role'];
+if ($peran != 'PJ') { // Memastikan hanya PJ (Penjual) yang bisa masuk
     echo '<script>window.location.href="../logout.php"</script>';
-} else {
+} else { 
 
 $halaman = 'home';
-// Mengambil ID penjual dari session yang aktif
-$id_penjual = $_SESSION['id_user']; 
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -38,13 +37,8 @@ include '../library.php';
       <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#">
           Hallo, <?= $_SESSION['nama']; ?> <i class="far fa-user"></i>
-          <span class="badge badge-warning navbar-badge"></span>
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-book mr-2"></i> Profil
-          </a>
           <div class="dropdown-divider"></div>
           <a href="../logout.php" class="dropdown-item">
             <i class="fas fa-sign-out-alt mr-2"></i> Keluar Sistem
@@ -65,9 +59,9 @@ include '../library.php';
     <!-- Sidebar -->
     <div class="sidebar">
       <?php
-      // Memanggil sidebar khusus penjual (Pastikan kamu sudah buat file ini!)
-      include '../sidebar_penjual.php';
+      include '../sidebar_penjual.php'; // Memanggil sidebar Penjual
       ?>
+      <!-- /.sidebar-menu -->
     </div>
     <!-- /.sidebar -->
   </aside>
@@ -91,27 +85,45 @@ include '../library.php';
       <div class="container-fluid">
         
         <?php
-        // --- QUERY MENGHITUNG STATISTIK KHUSUS PENJUAL INI ---
-        
-        // 1. Total Kucing milik penjual ini
-        $q_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE id_penjual = '$id_penjual'");
+        $id_penjual = $_SESSION['id_user'];
+       
+        // 1. Menghitung Total Kucing milik penjual
+        $q_kucing = mysqli_query($db, "SELECT id_kucing FROM kucing WHERE id_penjual = '$id_penjual'");
         $tot_kucing = mysqli_num_rows($q_kucing);
 
-        // 2. Pesanan Masuk (Status 'Diproses' -> artinya sudah dibayar dan siap dikirim)
-        // Kita pakai Subquery karena kamu tidak pakai JOIN
-        $q_pesanan = mysqli_query($db, "SELECT * FROM transaksi WHERE id_kucing IN (SELECT id_kucing FROM kucing WHERE id_penjual = '$id_penjual') AND status_transaksi = 'Diproses'");
+        // 2. Menghitung Pesanan Masuk (Status = Diproses) yang perlu dikirim
+        $q_pesanan = mysqli_query($db, "SELECT id_transaksi FROM transaksi JOIN kucing ON transaksi.id_kucing = kucing.id_kucing WHERE kucing.id_penjual = '$id_penjual' AND transaksi.status_transaksi = 'Diproses'");
         $tot_pesanan = mysqli_num_rows($q_pesanan);
 
-        // 3. Kucing yang sudah Terjual (Status Jual = 'TJ')
-        $q_terjual = mysqli_query($db, "SELECT * FROM kucing WHERE id_penjual = '$id_penjual' AND status_jual = 'TJ'");
+        // 3. Menghitung Kucing Terjual (Status Jual = TJ)
+        $q_terjual = mysqli_query($db, "SELECT id_kucing FROM kucing WHERE id_penjual = '$id_penjual' AND status_jual = 'TJ'");
         $tot_terjual = mysqli_num_rows($q_terjual);
+
+        // 4. Menghitung Total Riwayat Withdraw (Penarikan Dana)
+        $q_wd = mysqli_query($db, "SELECT id_penarikan FROM penarikan_dana WHERE id_penjual = '$id_penjual'");
+        $tot_wd = mysqli_num_rows($q_wd);
         ?>
 
         <!-- Small boxes (Stat box) -->
         <div class="row">
           
-          <!-- Box 1: Pesanan Masuk (Perlu Dikirim) -->
-          <div class="col-lg-4 col-6">
+          <!-- Kotak Biru -->
+          <div class="col-lg-3 col-6">
+            <div class="small-box bg-info">
+              <div class="inner">
+                <h3><?= $tot_kucing; ?></h3>
+                <p>Total Data Kucing</p>
+              </div>
+              <div class="icon">
+                <i class="fas fa-cat"></i>
+              </div>
+              <!-- Sesuaikan link ini dengan nama folder katalog penjual kamu -->
+              <a href="../katalog_kucing" class="small-box-footer">Lihat Detail <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+          
+          <!-- Kotak Kuning -->
+          <div class="col-lg-3 col-6">
             <div class="small-box bg-warning">
               <div class="inner">
                 <h3><?= $tot_pesanan; ?></h3>
@@ -120,38 +132,38 @@ include '../library.php';
               <div class="icon">
                 <i class="fas fa-box-open"></i>
               </div>
-              <!-- Link diarahkan ke folder pesanan masuk penjual -->
-              <a href="../pesanan_masuk" class="small-box-footer">Lihat Detail <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-          </div>
-          
-          <!-- Box 2: Total Kucing Saya -->
-          <div class="col-lg-4 col-6">
-            <div class="small-box bg-info">
-              <div class="inner">
-                <h3><?= $tot_kucing; ?></h3>
-                <p>Kucing Saya di Etalase</p>
-              </div>
-              <div class="icon">
-                <i class="fas fa-cat"></i>
-              </div>
-              <!-- Link diarahkan ke katalog kucing penjual -->
-              <a href="../katalog_saya" class="small-box-footer">Lihat Detail <i class="fas fa-arrow-circle-right"></i></a>
+              <!-- Sesuaikan link ini dengan nama folder data pesanan penjual kamu -->
+              <a href="../pesanan_penjual" class="small-box-footer">Lihat Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
 
-          <!-- Box 3: Total Kucing Terjual -->
-          <div class="col-lg-4 col-6">
+          <!-- Kotak Hijau -->
+          <div class="col-lg-3 col-6">
             <div class="small-box bg-success">
               <div class="inner">
                 <h3><?= $tot_terjual; ?></h3>
-                <p>Kucing Berhasil Terjual</p>
+                <p>Kucing Terjual</p>
               </div>
               <div class="icon">
-                <i class="fas fa-check-circle"></i>
+                <i class="fas fa-hand-holding-usd"></i>
               </div>
-              <!-- Bisa diarahkan ke riwayat penjualan -->
-              <a href="../riwayat_penjualan" class="small-box-footer">Lihat Detail <i class="fas fa-arrow-circle-right"></i></a>
+              <!-- Sesuaikan link ini dengan nama folder katalog penjual kamu -->
+              <a href="../katalog_kucing" class="small-box-footer">Lihat Detail <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+
+          <!-- Kotak Merah -->
+          <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger">
+              <div class="inner">
+                <h3><?= $tot_wd; ?></h3>
+                <p>Riwayat Penarikan</p>
+              </div>
+              <div class="icon">
+                <i class="fas fa-wallet"></i>
+              </div>
+              <!-- Sesuaikan link ini dengan nama folder withdraw penjual kamu -->
+              <a href="../withdraw" class="small-box-footer">Lihat Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
 
@@ -167,6 +179,7 @@ include '../library.php';
 
   <!-- Control Sidebar -->
   <aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
   </aside>
   <!-- /.control-sidebar -->
 
@@ -174,6 +187,9 @@ include '../library.php';
   <footer class="main-footer">
     <strong>Copyright &copy; 2026 <a href="#">MeowMart</a>.</strong>
     All rights reserved.
+    <div class="float-right d-none d-sm-inline-block">
+      <b>Version</b> 1.0.0
+    </div>
   </footer>
 </div>
 <!-- ./wrapper -->
@@ -185,5 +201,5 @@ include '../script.php';
 </body>
 </html>
 <?php
-} // Penutup kurung kurawal untuk cross authority Penjual
+} // TUTUP BLOK ELSE PEMBUNGKUS
 ?>

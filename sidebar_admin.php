@@ -42,7 +42,7 @@
           </li>
           <li class="nav-item">
             <a href="../riwayat_transaksi_admin" class="nav-link <?php if ($halaman == 'riwayat_transaksi') {echo 'active';}?>">
-              <i class="nav-icon fas fa-wallet"></i>
+              <i class="nav-icon fas fa-history"></i>
               <p>
                 Riwayat Transaksi
               </p>
@@ -50,7 +50,7 @@
           </li>
           <li class="nav-item">
             <a href="../rekening_admin" class="nav-link <?php if ($halaman == 'rekening_admin') {echo 'active';}?>">
-              <i class="nav-icon fas fa-wallet"></i>
+              <i class="nav-icon fas fa-credit-card"></i>
               <p>
                 Rekening Admin
               </p>
@@ -58,14 +58,14 @@
           </li>
           <li class="nav-item">
             <a href="../penarikan_dana_admin" class="nav-link <?php if ($halaman == 'penarikan_dana') {echo 'active';}?>">
-              <i class="nav-icon fas fa-wallet"></i>
+              <i class="nav-icon fas fa-hand-holding-usd"></i>
               <p>
                 Penarikan Dana
               </p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="../ganti_password_superadmin" class="nav-link <?php if ($halaman == 'ganti_pw') {echo 'active';}?>">
+            <a href="../ganti_password_admin" class="nav-link <?php if ($halaman == 'ganti_pw') {echo 'active';}?>">
               <i class="nav-icon fas fa-lock"></i>
               <p>
                 Ganti Password

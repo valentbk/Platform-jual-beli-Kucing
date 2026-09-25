@@ -137,7 +137,7 @@ include '../library.php';
                                     </button>
                                   </div>
                                   <div class="modal-body text-center">
-                                    <img src="../pembeli/bukti_transfer/<?= $bukti_transfer; ?>" alt="Bukti Transfer" class="img-fluid" style="max-height: 400px; width: auto;">
+                                    <img src="../bukti_transfer/<?= $bukti_transfer; ?>" alt="Bukti Transfer" class="img-fluid" style="max-height: 400px; width: auto;">
                                   </div>
                                   <div class="modal-footer justify-content-between">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
