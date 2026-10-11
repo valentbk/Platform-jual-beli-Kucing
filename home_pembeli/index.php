@@ -2,7 +2,7 @@
 require_once '../database/koneksi.php';
 
 $peran = $_SESSION['role'];
-if ($peran != 'PB') { // Hanya izinkan PB (Pembeli)
+if ($peran != 'PB') { 
     echo '<script>window.location.href="../logout.php"</script>';
 } else {
 
@@ -90,19 +90,15 @@ include '../library.php';
         <?php
         $id_pembeli = $_SESSION['id_user'];
        
-        // 1. Menghitung Pesanan Menunggu Verifikasi Admin
         $q_verifikasi = mysqli_query($db, "SELECT * FROM transaksi WHERE id_pembeli = '$id_pembeli' AND status_transaksi = 'Verifikasi Pembayaran'");
         $tot_verifikasi = mysqli_num_rows($q_verifikasi);
 
-        // 2. Menghitung Pesanan Diproses & Dikirim (Dalam Perjalanan)
         $q_proses = mysqli_query($db, "SELECT * FROM transaksi WHERE id_pembeli = '$id_pembeli' AND status_transaksi IN ('Diproses', 'Dikirim')");
         $tot_proses = mysqli_num_rows($q_proses);
 
-        // 3. Menghitung Pesanan Selesai
         $q_selesai = mysqli_query($db, "SELECT * FROM transaksi WHERE id_pembeli = '$id_pembeli' AND status_transaksi = 'Selesai'");
         $tot_selesai = mysqli_num_rows($q_selesai);
 
-        // 4. Menghitung Kucing yang Tersedia di Katalog (Untuk menarik minat beli lagi)
         $q_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE status_jual = 'TS' AND status_validasi = 'V'");
         $tot_kucing = mysqli_num_rows($q_kucing);
         ?>
@@ -110,7 +106,6 @@ include '../library.php';
         <!-- Small boxes (Stat box) -->
         <div class="row">
           
-          <!-- Kotak 1: Biru (Menunggu Verifikasi) -->
           <div class="col-lg-3 col-6">
             <div class="small-box bg-info">
               <div class="inner">
@@ -124,7 +119,6 @@ include '../library.php';
             </div>
           </div>
           
-          <!-- Kotak 2: Kuning (Diproses/Dikirim) -->
           <div class="col-lg-3 col-6">
             <div class="small-box bg-warning">
               <div class="inner">
@@ -138,7 +132,6 @@ include '../library.php';
             </div>
           </div>
 
-          <!-- Kotak 3: Hijau (Pesanan Selesai) -->
           <div class="col-lg-3 col-6">
             <div class="small-box bg-success">
               <div class="inner">
@@ -152,7 +145,6 @@ include '../library.php';
             </div>
           </div>
 
-          <!-- Kotak 4: Merah (Katalog Kucing) -->
           <div class="col-lg-3 col-6">
             <div class="small-box bg-danger">
               <div class="inner">

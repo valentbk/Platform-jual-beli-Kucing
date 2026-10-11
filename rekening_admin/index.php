@@ -1,5 +1,13 @@
 <?php
 require_once '../database/koneksi.php';
+
+// PROTEKSI HALAMAN: Pastikan hanya Admin (A) yang bisa mengakses halaman ini
+$peran = trim($_SESSION['role'] ?? '');
+if ($peran != 'A') {
+    echo '<script>window.location.href="../logout.php"</script>';
+    exit;
+}
+
 $halaman = 'rekening_admin';
 ?>
 <!DOCTYPE html>
@@ -44,7 +52,7 @@ include '../library.php';
 
   <!-- Main Sidebar Container -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <a href="index3.html" class="brand-link">
+    <a href="../admin/index.php" class="brand-link">
       <span class="brand-text font-weight-light">Sistem Jual Beli</span>
     </a>
     <div class="sidebar">
@@ -75,7 +83,7 @@ include '../library.php';
                   </thead>
                   <tbody>
                     <?php 
-                    $query_rek = mysqli_query($db, "SELECT * FROM rekening_admin ORDER BY id_rek_admin DESC") or die (mysqli_error($db));
+                    $query_rek = mysqli_query($db, "SELECT * FROM rekening_admin") or die (mysqli_error($db));
 
                     $rv = mysqli_num_rows($query_rek);
                     if ($rv > 0) {
@@ -111,6 +119,86 @@ include '../library.php';
                 </table>
               </div>
             </div>
+
+            <!-- Bagian Info Saldo & Rincian Keuntungan Admin -->
+            <?php
+            // Menghitung total 10% dari transaksi yang mutlak berstatus 'Selesai'
+            $q_saldo_admin = mysqli_query($db, "SELECT SUM(total_bayar) AS total_transaksi FROM transaksi WHERE status_transaksi = 'Selesai'");
+            $d_saldo_admin = mysqli_fetch_assoc($q_saldo_admin);
+            $total_transaksi = $d_saldo_admin['total_transaksi'] ?? 0;
+            
+            // Keuntungan admin adalah 10% dari total transaksi selesai
+            $saldo_admin = (int)($total_transaksi * 0.10);
+            ?>
+            <div class="row mt-4">
+              <!-- Kotak Total Keuntungan di Kiri -->
+              <div class="col-lg-4 col-12">
+                <div class="small-box bg-success">
+                  <div class="inner">
+                    <h3>Rp <?= number_format($saldo_admin, 0, ',', '.'); ?></h3>
+                    <p>Total Keuntungan Platform (10%)</p>
+                  </div>
+                  <div class="icon">
+                    <i class="fas fa-wallet"></i>
+                  </div>
+                  <div class="small-box-footer">
+                    Dari akumulasi pesanan yang berstatus <b>Selesai</b>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tabel Rincian Sumber Pendapatan di Kanan -->
+              <div class="col-lg-8 col-12">
+                <div class="card card-outline card-success">
+                  <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-list-alt"></i> Rincian Sumber Pendapatan Admin</h3>
+                  </div>
+                  <div class="card-body table-responsive p-0" style="max-height: 300px;">
+                    <table class="table table-head-fixed text-nowrap table-striped">
+                      <thead>
+                        <tr>
+                          <th>Tanggal</th>
+                          <th>Pembeli</th>
+                          <th>Total Harga Kucing</th>
+                          <th>Bagian Admin (10%)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <?php
+                        // Mengambil detail transaksi yang sudah selesai (Tanpa ORDER BY)
+                        $q_detail = mysqli_query($db, "SELECT id_pembeli, tanggal_transaksi, total_bayar FROM transaksi WHERE status_transaksi = 'Selesai'") or die (mysqli_error($db));
+                        
+                        if (mysqli_num_rows($q_detail) > 0) {
+                            while ($detail = mysqli_fetch_array($q_detail)) {
+                                $tgl = $detail['tanggal_transaksi'];
+                                $id_pembeli = $detail['id_pembeli'];
+                                $total_bayar = $detail['total_bayar'];
+                                $potongan_admin = (int)($total_bayar * 0.10);
+
+                                // Cari nama pembeli
+                                $q_nama_p = mysqli_query($db, "SELECT nama FROM users WHERE id_user = '$id_pembeli'");
+                                $d_nama_p = mysqli_fetch_assoc($q_nama_p);
+                                $nama_p = $d_nama_p['nama'] ?? 'Tidak Dikenal';
+                                ?>
+                                <tr>
+                                  <td><?= date('d-m-Y H:i', strtotime($tgl)); ?></td>
+                                  <td><?= $nama_p; ?></td>
+                                  <td>Rp <?= number_format($total_bayar, 0, ',', '.'); ?></td>
+                                  <td class="text-success font-weight-bold">+ Rp <?= number_format($potongan_admin, 0, ',', '.'); ?></td>
+                                </tr>
+                                <?php
+                            }
+                        } else {
+                            echo '<tr><td colspan="4" class="text-center text-muted">Belum ada transaksi selesai. Keuntungan masih Rp 0.</td></tr>';
+                        }
+                        ?>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
       </div>
     </div>
   </div>
@@ -140,7 +228,7 @@ include '../library.php';
 
                 <div class="form-group">
                   <label for="">Nomor Rekening</label>
-                  <input type="number" name="no_rekening" class="form-control" placeholder="Masukan Nomor Rekening" required>
+                  <input type="text" name="no_rekening" class="form-control" placeholder="Masukan Nomor Rekening" required>
                 </div>
 
                 <div class="form-group">
@@ -179,7 +267,7 @@ include '../library.php';
 
                 <div class="form-group">
                   <label for="">Nomor Rekening</label>
-                  <input type="number" name="no_rekening" class="form-control" required>
+                  <input type="text" name="no_rekening" class="form-control" required>
                 </div>
 
                 <div class="form-group">
@@ -202,7 +290,7 @@ include '../library.php';
 
 <script>
   $('#modal-edit').on('show.bs.modal', function(e){
-    // Menangkap data dari tombol yang diklik (disesuaikan dengan nama kolom DB)
+    // Menangkap data dari tombol yang diklik
     var id_rek_admin = $(e.relatedTarget).data('id_rek_admin');
     var nama_bank = $(e.relatedTarget).data('nama_bank');
     var no_rekening = $(e.relatedTarget).data('no_rekening');

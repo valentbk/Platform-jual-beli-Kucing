@@ -87,8 +87,7 @@ include '../library.php';
         
         <div class="row">
           <?php 
-          // 1. QUERY PENTING: Hanya panggil kucing yang "Tersedia" dan "Valid"
-          $query_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE status_jual = 'TS' AND status_validasi = 'V' ORDER BY created_at DESC") or die (mysqli_error($db));
+          $query_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE status_jual = 'TS' AND status_validasi = 'V'") or die (mysqli_error($db));
 
           $rv = mysqli_num_rows($query_kucing);
           if ($rv > 0) {
@@ -99,7 +98,6 @@ include '../library.php';
                   $umur_bulan = $data['umur_bulan'];
                   $harga = $data['harga'];
                   
-                  // Query mencari Nama Ras
                   $q_ras = mysqli_query($db, "SELECT nama_ras FROM kategori_ras WHERE id_ras = '$id_ras'");
                   $d_ras = mysqli_fetch_assoc($q_ras);
                   $nama_ras = $d_ras['nama_ras'] ?? 'Lainnya';

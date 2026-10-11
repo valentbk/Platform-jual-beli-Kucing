@@ -79,7 +79,7 @@ include '../library.php';
                   <tbody>
                     <?php 
                     // Query mengambil riwayat penarikan milik penjual ini
-                    $query_wd = mysqli_query($db, "SELECT * FROM penarikan_dana WHERE id_penjual = '$id_penjual' ORDER BY tanggal_pengajuan DESC") or die (mysqli_error($db));
+                    $query_wd = mysqli_query($db, "SELECT * FROM penarikan_dana WHERE id_penjual = '$id_penjual' ORDER BY id_penarikan DESC") or die (mysqli_error($db));
 
                     $rv = mysqli_num_rows($query_wd);
                     if ($rv > 0) {
@@ -93,16 +93,17 @@ include '../library.php';
                             $status_penarikan = $data['status_penarikan'];
 
                             // Query mencari detail rekening
-                            $q_rek = mysqli_query($db, "SELECT nama_bank, no_rekening FROM rekening_penjual WHERE id_rek_penjual = '$id_rek_penjual'");
+                            $q_rek = mysqli_query($db, "SELECT nama_bank, no_rekening, atas_nama FROM rekening_penjual WHERE id_rek_penjual = '$id_rek_penjual'");
                             $d_rek = mysqli_fetch_assoc($q_rek);
                             $nama_bank = $d_rek['nama_bank'] ?? 'Tidak Ditemukan';
                             $no_rekening = $d_rek['no_rekening'] ?? '-';
+                            $atas_nama = $d_rek['atas_nama'] ?? '-';
                             ?>
                             <tr>
                                 <td><?= $no++; ?></td>
                                 <td><?= date('d-m-Y H:i', strtotime($tanggal_pengajuan)); ?></td>
                                 <td><strong class="text-success">Rp <?= number_format($nominal, 0, ',', '.'); ?></strong></td>
-                                <td><?= $nama_bank; ?> - <?= $no_rekening; ?></td>
+                                <td><?= $nama_bank; ?> - <?= $no_rekening; ?><br><small>(a.n <?= $atas_nama; ?>)</small></td>
                                 <td>
                                     <?php 
                                     if ($status_penarikan == 'Pending') {
@@ -131,7 +132,7 @@ include '../library.php';
                                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                                               </div>
                                               <div class="modal-body text-center">
-                                                <!-- Arahkan path gambar ke folder admin/bukti_withdraw/ -->
+                                                <!-- Arahkan path gambar ke folder bukti_withdraw/ -->
                                                 <img src="../bukti_withdraw/<?= $bukti_transfer; ?>" alt="Bukti TF" class="img-fluid">
                                               </div>
                                             </div>
@@ -171,6 +172,18 @@ include '../library.php';
             <div class="modal-body">
                 <input type="hidden" name="id_penjual" value="<?= $id_penjual; ?>">
                 
+                <?php
+                // Ambil saldo dompet virtual penjual saat ini dari tabel users
+                $q_saldo_form = mysqli_query($db, "SELECT saldo FROM users WHERE id_user = '$id_penjual'");
+                $d_saldo_form = mysqli_fetch_assoc($q_saldo_form);
+                $max_tarik = $d_saldo_form['saldo'] ?? 0;
+                ?>
+                
+                <!-- Kotak Informasi Saldo -->
+                <div class="alert alert-info pb-0">
+                  <p><i class="fas fa-wallet"></i> Saldo Anda saat ini: <strong>Rp <?= number_format($max_tarik, 0, ',', '.'); ?></strong></p>
+                </div>
+
                 <div class="form-group">
                   <label>Pilih Rekening Tujuan Anda</label>
                   <select name="id_rek_penjual" class="form-control" required>
@@ -188,14 +201,19 @@ include '../library.php';
 
                 <div class="form-group">
                   <label>Nominal Penarikan (Rp)</label>
-                  <input type="number" name="nominal" class="form-control" placeholder="Contoh: 500000" min="10000" required>
-                  <small class="text-muted">Pastikan nominal sesuai dengan hasil penjualan Anda.</small>
+                  <!-- Menambahkan max_tarik agar penjual tidak bisa menarik lebih dari saldo -->
+                  <input type="number" name="nominal" class="form-control" placeholder="Contoh: 500000" min="10000" max="<?= $max_tarik; ?>" required>
+                  <small class="text-muted">Minimal penarikan Rp 10.000. Pastikan nominal sesuai dengan saldo Anda.</small>
                 </div>
 
             </div>
             <div class="modal-footer justify-content-between">
               <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
-              <button name="btn-tarik" type="submit" class="btn btn-success">Ajukan Penarikan</button>
+              <?php if($max_tarik >= 10000): ?>
+                  <button name="btn-tarik" type="submit" class="btn btn-success">Ajukan Penarikan</button>
+              <?php else: ?>
+                  <button type="button" class="btn btn-secondary" disabled>Saldo Tidak Cukup</button>
+              <?php endif; ?>
             </div>
             </form>
           </div>

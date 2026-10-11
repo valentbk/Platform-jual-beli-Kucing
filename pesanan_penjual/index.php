@@ -76,7 +76,7 @@ include '../library.php';
                   <tbody>
                     <?php 
                     // Query mengambil transaksi yang ID Kucingnya ada di dalam tabel kucing milik penjual ini
-                    $query_pesanan = mysqli_query($db, "SELECT * FROM transaksi WHERE id_kucing IN (SELECT id_kucing FROM kucing WHERE id_penjual = '$id_penjual') ORDER BY tanggal_transaksi DESC") or die (mysqli_error($db));
+                    $query_pesanan = mysqli_query($db, "SELECT * FROM transaksi WHERE id_kucing IN (SELECT id_kucing FROM kucing WHERE id_penjual = '$id_penjual')") or die (mysqli_error($db));
 
                     $rv = mysqli_num_rows($query_pesanan);
                     if ($rv > 0) {

@@ -1,9 +1,14 @@
 <?php
 require_once '../database/koneksi.php';
 
+$peran = trim($_SESSION['role'] ?? '');
+if ($peran != 'A') {
+    echo '<script>window.location.href="../logout.php"</script>';
+    exit;
+}
+
 $halaman = 'data_master';
 
-// Cek apakah ada parameter nama_kucing di URL
 if (!isset($_GET['nama_kucing'])) {
     echo '<script>window.location.href="index.php"</script>';
     exit;
@@ -11,11 +16,9 @@ if (!isset($_GET['nama_kucing'])) {
 
 $nama_kucing_get = mysqli_real_escape_string($db, $_GET['nama_kucing']);
 
-// Mengambil data kucing BEBAS untuk Admin (tanpa filter id_penjual)
 $query_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE nama_kucing = '$nama_kucing_get'");
 $data = mysqli_fetch_assoc($query_kucing);
 
-// Jika data tidak ditemukan di tabel kucing
 if (!$data) {
     echo '<script>alert("Data kucing tidak ditemukan di database!"); window.location.href="index.php"</script>';
     exit;
@@ -91,6 +94,19 @@ $nama_ras = $d_ras['nama_ras'] ?? 'Lainnya';
           <div class="col-md-6">
             <div class="card card-primary card-outline">
               <div class="card-body box-profile">
+                
+                <!-- Menampilkan Foto Kucing -->
+                <div class="text-center mb-3">
+                  <?php if (!empty($data['foto_kucing'])): ?>
+                    <img class="img-fluid rounded" src="../asset_adminlte/img/<?= $data['foto_kucing']; ?>" alt="Foto Kucing" style="max-height: 250px; object-fit: cover;">
+                  <?php else: ?>
+                    <div class="text-muted border p-4 rounded" style="background-color: #f8f9fa;">
+                      <i class="fas fa-camera fa-3x mb-2"></i><br>
+                      Belum ada foto
+                    </div>
+                  <?php endif; ?>
+                </div>
+
                 <h3 class="profile-username text-center"><?= $data['nama_kucing']; ?></h3>
                 <p class="text-muted text-center"><?= $nama_ras; ?></p>
 

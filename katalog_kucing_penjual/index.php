@@ -1,6 +1,13 @@
 <?php
 require_once '../database/koneksi.php';
 
+// PROTEKSI HALAMAN: Pastikan hanya Penjual (PJ) yang bisa mengakses halaman ini
+$peran = trim($_SESSION['role'] ?? '');
+if ($peran != 'PJ') {
+    echo '<script>window.location.href="../logout.php"</script>';
+    exit;
+}
+
 $halaman = 'katalog_kucing';
 // Mengambil ID penjual dari session yang aktif saat login
 $id_penjual = $_SESSION['id_user']; 
@@ -66,6 +73,7 @@ include '../library.php';
                   <thead>
                   <tr>
                     <th>No</th>
+                    <th>Foto</th>
                     <th>Nama Kucing</th>
                     <th>Ras Kucing</th>
                     <th>Jenis Kelamin</th>
@@ -77,8 +85,7 @@ include '../library.php';
                   </thead>
                   <tbody>
                     <?php 
-                    // Query biasa memfilter KHUSUS milik id_penjual yang login
-                    $query_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE id_penjual = '$id_penjual' ORDER BY created_at DESC") or die (mysqli_error($db));
+                    $query_kucing = mysqli_query($db, "SELECT * FROM kucing WHERE id_penjual = '$id_penjual' ORDER BY id_kucing DESC") or die (mysqli_error($db));
 
                     $rv = mysqli_num_rows($query_kucing);
                     if ($rv > 0) {
@@ -90,18 +97,25 @@ include '../library.php';
                             $jenis_kelamin = $data['jenis_kelamin'];
                             $umur_bulan = $data['umur_bulan'];
                             $harga = $data['harga'];
-                            $status_validasi = $data['status_validasi']; // 'P' (Pending), 'V' (Valid), 'D' (Ditolak)
+                            $status_validasi = $data['status_validasi'];
                             $status_jual = $data['status_jual'];
                             $deskripsi = $data['deskripsi'];
                             $file_kesehatan = $data['file_kesehatan'];
+                            $foto_kucing = $data['foto_kucing'];
 
-                            // Query biasa untuk mencari Nama Ras berdasarkan id_ras
                             $q_ras = mysqli_query($db, "SELECT nama_ras FROM kategori_ras WHERE id_ras = '$id_ras'");
                             $d_ras = mysqli_fetch_assoc($q_ras);
                             $nama_ras = $d_ras['nama_ras'] ?? 'Lainnya';
                             ?>
                             <tr>
                                 <td><?= $no++; ?></td>
+                                <td>
+                                    <?php if (!empty($foto_kucing)) { ?>
+                                        <img src="../asset_adminlte/img/<?= $foto_kucing; ?>" alt="Foto" style="width: 80px; height: auto;">
+                                    <?php } else { ?>
+                                        <span class="text-muted">Tidak ada foto</span>
+                                    <?php } ?>
+                                </td>
                                 <td><?= $nama_kucing; ?></td>
                                 <td><?= $nama_ras; ?></td>
                                 <td><?= ($jenis_kelamin == 'J') ? 'Jantan' : 'Betina'; ?></td>
@@ -119,10 +133,8 @@ include '../library.php';
                                     ?>
                                 </td>
                                 <td>
-                                  <!-- Tombol Detail -->
                                   <a class="btn btn-sm btn-info" href="detail_kucing.php?nama_kucing=<?= $nama_kucing; ?>"><i class="fas fa-eye"></i> Detail</a>
 
-                                  <!-- Penjual hanya bisa Edit & Hapus jika kucing belum dibeli orang (Status Jual 'TS') -->
                                   <?php if ($status_jual == 'TS') { ?>
                                       <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#modal-edit"
                                         data-id_kucing="<?= $id_kucing; ?>"
@@ -132,7 +144,8 @@ include '../library.php';
                                         data-jenis_kelamin="<?= $jenis_kelamin; ?>"
                                         data-umur_bulan="<?= $umur_bulan; ?>"
                                         data-deskripsi="<?= $deskripsi; ?>"
-                                        data-file_kesehatan="<?= $file_kesehatan; ?>">
+                                        data-file_kesehatan="<?= $file_kesehatan; ?>"
+                                        data-foto_kucing="<?= $foto_kucing; ?>">
                                         <i class="fas fa-edit"></i> Edit
                                       </button>
                                       
@@ -169,7 +182,6 @@ include '../library.php';
             </div>
             <form action="proses_tambah_kucing.php" method="post" enctype="multipart/form-data">
             <div class="modal-body">
-                <!-- Penjual tidak perlu pilih nama, sistem langsung mengirimkan ID penjual yang login -->
                 <input type="hidden" name="id_penjual" value="<?= $id_penjual; ?>">
                 
                 <div class="form-group">
@@ -205,12 +217,19 @@ include '../library.php';
 
                 <div class="form-group">
                   <label>Harga (Rp)</label>
-                  <input type="number" name="harga" class="form-control" required>
+                  <input type="number" name="harga" id="harga_tambah" class="form-control" required>
+                  <small class="text-info font-weight-bold" id="info_terima_tambah">Penerimaan Bersih (setelah potong 10%): Rp 0</small>
                 </div>
 
                 <div class="form-group">
                   <label>Deskripsi (Kesehatan, Vaksin, dsb)</label>
                   <textarea name="deskripsi" class="form-control" required></textarea>
+                </div>
+
+                <!-- Input File Foto Kucing -->
+                <div class="form-group">
+                  <label>Foto Kucing</label>
+                  <input type="file" name="foto_kucing" class="form-control" required>
                 </div>
 
                 <div class="form-group">
@@ -272,12 +291,21 @@ include '../library.php';
 
                 <div class="form-group">
                   <label>Harga (Rp)</label>
-                  <input type="number" name="harga" class="form-control" required>
+                  <input type="number" name="harga" id="harga_edit" class="form-control" required>
+                  <small class="text-info font-weight-bold" id="info_terima_edit">Penerimaan Bersih (setelah potong 10%): Rp 0</small>
                 </div>
 
                 <div class="form-group">
                   <label>Deskripsi</label>
                   <textarea name="deskripsi" class="form-control" required></textarea>
+                </div>
+
+                <!-- Input Foto Edit -->
+                <div class="form-group">
+                  <label>Foto Kucing Baru</label>
+                  <input type="hidden" name="foto_kucing_lama">
+                  <input type="file" name="foto_kucing" class="form-control">
+                  <small class="text-muted">Biarkan kosong jika tidak diganti.</small>
                 </div>
 
                 <div class="form-group">
@@ -300,6 +328,36 @@ include '../library.php';
 <?php include '../script.php'; ?>
 
 <script>
+  // Fungsi format Rupiah untuk JavaScript
+  function formatRupiah(angka) {
+      return new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          minimumFractionDigits: 0
+      }).format(angka);
+  }
+
+  // Event hitung otomatis untuk Modal Tambah
+  $('#harga_tambah').on('input', function() {
+      var harga = $(this).val();
+      var terima = 0;
+      if(harga && harga > 0) {
+          terima = harga - (harga * 0.10);
+      }
+      $('#info_terima_tambah').text('Penerimaan Bersih (setelah potong 10%): ' + formatRupiah(terima));
+  });
+
+  // Event hitung otomatis untuk Modal Edit
+  $('#harga_edit').on('input', function() {
+      var harga = $(this).val();
+      var terima = 0;
+      if(harga && harga > 0) {
+          terima = harga - (harga * 0.10);
+      }
+      $('#info_terima_edit').text('Penerimaan Bersih (setelah potong 10%): ' + formatRupiah(terima));
+  });
+
+  // Menangkap data ke dalam form modal edit
   $('#modal-edit').on('show.bs.modal', function(e){
     var id_kucing = $(e.relatedTarget).data('id_kucing');
     var id_ras = $(e.relatedTarget).data('id_ras');
@@ -309,6 +367,7 @@ include '../library.php';
     var umur_bulan = $(e.relatedTarget).data('umur_bulan');
     var deskripsi = $(e.relatedTarget).data('deskripsi');
     var file_kesehatan = $(e.relatedTarget).data('file_kesehatan');
+    var foto_kucing = $(e.relatedTarget).data('foto_kucing');
     
     $(e.currentTarget).find('input[name="id_kucing"]').val(id_kucing);
     $(e.currentTarget).find('select[name="id_ras"]').val(id_ras);
@@ -318,6 +377,11 @@ include '../library.php';
     $(e.currentTarget).find('input[name="umur_bulan"]').val(umur_bulan);
     $(e.currentTarget).find('textarea[name="deskripsi"]').val(deskripsi);
     $(e.currentTarget).find('input[name="file_kesehatan_lama"]').val(file_kesehatan);
+    $(e.currentTarget).find('input[name="foto_kucing_lama"]').val(foto_kucing);
+
+    // Hitung pendapatan bersih saat form edit dibuka agar text-nya menyesuaikan dengan harga yang tersimpan
+    var terima_edit = harga - (harga * 0.10);
+    $('#info_terima_edit').text('Penerimaan Bersih (setelah potong 10%): ' + formatRupiah(terima_edit));
   });
 </script>
 </body>

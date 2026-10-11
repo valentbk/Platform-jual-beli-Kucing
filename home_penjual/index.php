@@ -1,10 +1,8 @@
 <?php
 require_once '../database/koneksi.php';
 
-$peran = trim($_SESSION['role'] ?? '');
-
 $peran = $_SESSION['role'];
-if ($peran != 'PJ') { // Memastikan hanya PJ (Penjual) yang bisa masuk
+if ($peran != 'PJ') { 
     echo '<script>window.location.href="../logout.php"</script>';
 } else { 
 
@@ -59,7 +57,7 @@ include '../library.php';
     <!-- Sidebar -->
     <div class="sidebar">
       <?php
-      include '../sidebar_penjual.php'; // Memanggil sidebar Penjual
+      include '../sidebar_penjual.php';
       ?>
       <!-- /.sidebar-menu -->
     </div>
@@ -87,19 +85,15 @@ include '../library.php';
         <?php
         $id_penjual = $_SESSION['id_user'];
        
-        // 1. Menghitung Total Kucing milik penjual
         $q_kucing = mysqli_query($db, "SELECT id_kucing FROM kucing WHERE id_penjual = '$id_penjual'");
         $tot_kucing = mysqli_num_rows($q_kucing);
 
-        // 2. Menghitung Pesanan Masuk (Status = Diproses) yang perlu dikirim
         $q_pesanan = mysqli_query($db, "SELECT id_transaksi FROM transaksi JOIN kucing ON transaksi.id_kucing = kucing.id_kucing WHERE kucing.id_penjual = '$id_penjual' AND transaksi.status_transaksi = 'Diproses'");
         $tot_pesanan = mysqli_num_rows($q_pesanan);
 
-        // 3. Menghitung Kucing Terjual (Status Jual = TJ)
         $q_terjual = mysqli_query($db, "SELECT id_kucing FROM kucing WHERE id_penjual = '$id_penjual' AND status_jual = 'TJ'");
         $tot_terjual = mysqli_num_rows($q_terjual);
 
-        // 4. Menghitung Total Riwayat Withdraw (Penarikan Dana)
         $q_wd = mysqli_query($db, "SELECT id_penarikan FROM penarikan_dana WHERE id_penjual = '$id_penjual'");
         $tot_wd = mysqli_num_rows($q_wd);
         ?>

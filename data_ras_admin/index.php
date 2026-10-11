@@ -88,7 +88,6 @@ include '../library.php';
                   </thead>
                   <tbody>
                     <?php 
-                    // Mengambil data dari tabel kategori_ras sesuai struktur database
                     $query_ambil_data = mysqli_query($db,"SELECT * FROM kategori_ras") or die (mysqli_error($db));
                     $rv = mysqli_num_rows($query_ambil_data);
                     if ($rv > 0) {

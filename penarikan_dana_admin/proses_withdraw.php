@@ -6,6 +6,19 @@ if (isset($_POST['btn-proses-wd'])) {
     $id_penarikan = trim(mysqli_real_escape_string($db, $_POST['id_penarikan']));
     $status_penarikan = trim(mysqli_real_escape_string($db, $_POST['status_penarikan']));
     
+    // 1. Ambil data penarikan untuk mengetahui id_penjual dan nominal yang diajukan
+    $q_wd = mysqli_query($db, "SELECT id_penjual, nominal, status_penarikan AS status_lama FROM penarikan_dana WHERE id_penarikan = '$id_penarikan'");
+    $d_wd = mysqli_fetch_assoc($q_wd);
+    
+    if (!$d_wd) {
+        echo "<script>alert('Data penarikan tidak ditemukan!'); window.location.href='index.php';</script>";
+        exit;
+    }
+
+    $id_penjual = $d_wd['id_penjual'];
+    $nominal = $d_wd['nominal'];
+    $status_lama = $d_wd['status_lama'];
+
     $nama_file_bukti = '';
     $query_update = "";
     
@@ -57,7 +70,13 @@ if (isset($_POST['btn-proses-wd'])) {
     
     if (!empty($query_update)) {
         $eksekusi = mysqli_query($db, $query_update) or die(mysqli_error($db));
+        
         if ($eksekusi) {
+            // LOGIKA TAMBAHAN: Jika sebelumnya bukan 'Ditolak' lalu sekarang diubah menjadi 'Ditolak', kembalikan saldo ke penjual
+            if ($status_penarikan == 'Ditolak' && $status_lama != 'Ditolak') {
+                mysqli_query($db, "UPDATE users SET saldo = saldo + $nominal WHERE id_user = '$id_penjual'");
+            }
+
             echo '<script>alert("Proses Penarikan Dana Berhasil Disimpan!")</script>';
             echo '<script>window.location.href="index.php"</script>'; 
         } else {

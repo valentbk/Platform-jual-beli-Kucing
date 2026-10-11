@@ -81,7 +81,7 @@ $id_pembeli = $_SESSION['id_user'];
               <tbody>
                 <?php 
                 // Query mengambil data transaksi KHUSUS pembeli yang sedang login
-                $query_pesanan = mysqli_query($db, "SELECT * FROM transaksi WHERE id_pembeli = '$id_pembeli' ORDER BY tanggal_transaksi DESC") or die (mysqli_error($db));
+                $query_pesanan = mysqli_query($db, "SELECT * FROM transaksi WHERE id_pembeli = '$id_pembeli'") or die (mysqli_error($db));
 
                 $rv = mysqli_num_rows($query_pesanan);
                 if ($rv > 0) {

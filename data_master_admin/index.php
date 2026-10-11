@@ -1,5 +1,13 @@
 <?php
 require_once '../database/koneksi.php';
+
+// PROTEKSI HALAMAN: Pastikan hanya Admin (A) yang bisa mengakses halaman ini
+$peran = trim($_SESSION['role'] ?? '');
+if ($peran != 'A') {
+    echo '<script>window.location.href="../logout.php"</script>';
+    exit;
+}
+
 $halaman = 'data_master';
 ?>
 <!DOCTYPE html>
@@ -29,7 +37,7 @@ include '../library.php';
       <!-- Notifications Dropdown Menu -->
       <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#">
-          Hallo, <?= $_SESSION['nama'] ?? 'User'; ?> <i class="far fa-user"></i>
+          Hallo, <?= $_SESSION['nama'] ?? 'Admin'; ?> <i class="far fa-user"></i>
           <span class="badge badge-warning navbar-badge"></span>
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
@@ -38,7 +46,7 @@ include '../library.php';
             <i class="fas fa-book mr-2"></i> Profil
           </a>
           <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
+          <a href="../logout.php" class="dropdown-item">
             <i class="fas fa-sign-out-alt mr-2"></i> Keluar Sistem
           </a>
         </div>
@@ -50,7 +58,7 @@ include '../library.php';
   <!-- Main Sidebar Container -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="index3.html" class="brand-link">
+    <a href="index.php" class="brand-link">
       <span class="brand-text font-weight-light">Sistem Jual Beli</span>
     </a>
 
@@ -69,7 +77,7 @@ include '../library.php';
     <!-- Main content -->
     <div class="content">
       <div class="container-fluid">
-        <div class="card">
+        <div class="card mt-3">
               <div class="card-header">
                 <h3 class="card-title">Data Kucing</h3>
               </div>
@@ -80,6 +88,7 @@ include '../library.php';
                   <thead>
                   <tr>
                     <th>No</th>
+                    <th>Foto</th>
                     <th>Nama Penjual</th>
                     <th>Nama Kucing</th>
                     <th>Ras Kucing</th>
@@ -91,8 +100,7 @@ include '../library.php';
                   </thead>
                   <tbody>
                     <?php 
-                    // Query biasa untuk mengambil seluruh data kucing
-                    $query_ambil_data = mysqli_query($db, "SELECT * FROM kucing") or die (mysqli_error($db));
+                    $query_ambil_data = mysqli_query($db, "SELECT * FROM kucing ORDER BY id_kucing DESC") or die (mysqli_error($db));
 
                     $rv = mysqli_num_rows($query_ambil_data);
                     if ($rv > 0) {
@@ -124,6 +132,13 @@ include '../library.php';
                         ?>
                         <tr>
                         <td><?= $no++; ?></td>
+                        <td>
+                            <?php if (!empty($foto_kucing)) { ?>
+                                <img src="../asset_adminlte/img/<?= $foto_kucing; ?>" alt="Foto" style="width: 80px; height: auto;">
+                            <?php } else { ?>
+                                <span class="text-muted">Tidak ada foto</span>
+                            <?php } ?>
+                        </td>
                         <td><?= $nama_penjual; ?></td>
                         <td><?= $nama_kucing; ?></td>
                         <td><?= $nama_ras; ?></td>
@@ -150,11 +165,12 @@ include '../library.php';
                             data-jenis_kelamin="<?= $jenis_kelamin; ?>"
                             data-umur_bulan="<?= $umur_bulan; ?>"
                             data-deskripsi="<?= $deskripsi; ?>"
-                            data-file_kesehatan="<?= $file_kesehatan; ?>">
+                            data-file_kesehatan="<?= $file_kesehatan; ?>"
+                            data-foto_kucing="<?= $foto_kucing; ?>">
                             <i class="fas fa-edit"></i> Edit
-                        </button>
+                          </button>
 
-                          <a class="btn btn-sm  btn-danger" href="proses_hapus.php?nama_kucing=<?= $nama_kucing ?>" onclick="return confirm('apakah kamu yakin akan menghapus data ini?')"><i class="fas fa-trash" ></i></a>
+                          <a class="btn btn-sm  btn-danger" href="proses_hapus.php?nama_kucing=<?= $nama_kucing ?>" onclick="return confirm('Apakah kamu yakin akan menghapus data ini?')"><i class="fas fa-trash" ></i></a>
                         </td>
                         </tr>
                         <?php
@@ -175,11 +191,7 @@ include '../library.php';
 
   <!-- Main Footer -->
   <footer class="main-footer">
-    <strong>Copyright &copy; 2014-2021 <a href="https://adminlte.io">AdminLTE.io</a>.</strong>
-    All rights reserved.
-    <div class="float-right d-none d-sm-inline-block">
-      <b>Version</b> 3.2.0
-    </div>
+    <strong>Copyright &copy; 2026 MeowMart.</strong> All rights reserved.
   </footer>
 </div>
 <!-- ./wrapper -->
@@ -280,7 +292,13 @@ include '../library.php';
                   <textarea name="deskripsi" class="form-control" placeholder="Masukan Deskripsi" required></textarea>
                 </div>
 
-                <!-- 10. File Kesehatan -->
+                <!-- 10. Foto Kucing -->
+                <div class="form-group">
+                  <label>Foto Kucing</label>
+                  <input type="file" name="foto_kucing" class="form-control" required>
+                </div>
+
+                <!-- 11. File Kesehatan -->
                 <div class="form-group">
                   <label for="file_kesehatan">File Kesehatan (PDF)</label>
                   <input type="file" name="file_kesehatan" class="form-control" accept=".pdf">
@@ -394,7 +412,15 @@ include '../library.php';
                   <textarea name="deskripsi" class="form-control" required></textarea>
                 </div>
 
-                <!-- 10. File Kesehatan -->
+                <!-- 10. Foto Kucing -->
+                <div class="form-group">
+                  <label>Foto Kucing</label>
+                  <input type="hidden" name="foto_kucing_lama">
+                  <input type="file" name="foto_kucing" class="form-control">
+                  <small class="text-muted">Biarkan kosong jika tidak ingin mengubah foto.</small>
+                </div>
+
+                <!-- 11. File Kesehatan -->
                 <div class="form-group">
                   <label for="">File Kesehatan (PDF)</label>
                   <input type="hidden" name="file_kesehatan_lama">
@@ -427,6 +453,7 @@ include '../library.php';
     var umur_bulan = $(e.relatedTarget).data('umur_bulan');
     var deskripsi = $(e.relatedTarget).data('deskripsi');
     var file_kesehatan = $(e.relatedTarget).data('file_kesehatan');
+    var foto_kucing = $(e.relatedTarget).data('foto_kucing');
     
     $(e.currentTarget).find('input[name="id_kucing"]').val(id_kucing);
     $(e.currentTarget).find('select[name="id_penjual"]').val(id_penjual);
@@ -439,6 +466,7 @@ include '../library.php';
     $(e.currentTarget).find('input[name="umur_bulan"]').val(umur_bulan);
     $(e.currentTarget).find('textarea[name="deskripsi"]').val(deskripsi);
     $(e.currentTarget).find('input[name="file_kesehatan_lama"]').val(file_kesehatan);
+    $(e.currentTarget).find('input[name="foto_kucing_lama"]').val(foto_kucing);
   });
 </script>
 </body>

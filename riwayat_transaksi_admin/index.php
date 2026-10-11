@@ -91,7 +91,7 @@ include '../library.php';
                   <tbody>
                     <?php 
                     // Query biasa mengambil seluruh riwayat transaksi
-                    $query_transaksi = mysqli_query($db, "SELECT * FROM transaksi ORDER BY tanggal_transaksi DESC") or die (mysqli_error($db));
+                    $query_transaksi = mysqli_query($db, "SELECT * FROM transaksi") or die (mysqli_error($db));
 
                     $rv = mysqli_num_rows($query_transaksi);
                     if ($rv > 0) {

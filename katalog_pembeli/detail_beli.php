@@ -29,9 +29,7 @@ $q_ras = mysqli_query($db, "SELECT nama_ras FROM kategori_ras WHERE id_ras = '$i
 $d_ras = mysqli_fetch_assoc($q_ras);
 $nama_ras = $d_ras['nama_ras'] ?? 'Lainnya';
 
-// 2. Ambil data pembeli (Untuk menampilkan alamat pengiriman)
-$q_pembeli = mysqli_query($db, "SELECT nama, no_hp, alamat FROM users WHERE id_user = '$id_pembeli'");
-$d_pembeli = mysqli_fetch_assoc($q_pembeli);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -110,7 +108,7 @@ $d_pembeli = mysqli_fetch_assoc($q_pembeli);
                     <b>Sertifikat / Vaksin</b> 
                     <a class="float-right">
                         <?php if(!empty($data['file_kesehatan'])) { ?>
-                            <a href="../data_master/pdf/<?= $data['file_kesehatan']; ?>" target="_blank" class="badge badge-info float-right"><i class="fas fa-file-pdf"></i> Lihat File</a>
+                            <a href="../data_master_admin/pdf/<?= $data['file_kesehatan']; ?>" target="_blank" class="badge badge-info float-right"><i class="fas fa-file-pdf"></i> Lihat File</a>
                         <?php } else { echo '<span class="text-muted float-right">Tidak ada file</span>'; } ?>
                     </a>
                   </li>
@@ -126,65 +124,6 @@ $d_pembeli = mysqli_fetch_assoc($q_pembeli);
               </div>
             </div>
           </div>
-
-          <!-- Form Pembayaran & Pengiriman (Kanan) -->
-          <div class="col-md-6">
-            <div class="card card-success">
-              <div class="card-header">
-                <h3 class="card-title">Pembayaran & Pengiriman</h3>
-              </div>
-              <form action="proses_beli.php" method="post" enctype="multipart/form-data">
-                <div class="card-body">
-                  
-                  <div class="alert alert-info alert-dismissible">
-                    <h5><i class="icon fas fa-info"></i> Alamat Pengiriman</h5>
-                    Pastikan alamat Anda di bawah ini sudah lengkap. Jika salah, ubah di menu Profil terlebih dahulu.
-                  </div>
-                  
-                  <p>
-                    <strong>Penerima:</strong> <?= $d_pembeli['nama']; ?> (<?= $d_pembeli['no_hp'] ?? '-'; ?>)<br>
-                    <strong>Alamat:</strong> <?= $d_pembeli['alamat'] ?? 'Belum diisi!'; ?>
-                  </p>
-
-                  <hr>
-                  
-                  <h5 class="text-danger font-weight-bold">Langkah Pembayaran (Escrow):</h5>
-                  <p>1. Silakan transfer senilai <strong>Rp <?= number_format($harga, 0, ',', '.'); ?></strong> ke salah satu rekening Admin MeowMart berikut ini:</p>
-                  
-                  <!-- Menampilkan List Rekening Admin -->
-                  <div class="row">
-                    <?php 
-                    $q_rek_admin = mysqli_query($db, "SELECT * FROM rekening_admin");
-                    while($r_admin = mysqli_fetch_assoc($q_rek_admin)) {
-                    ?>
-                    <div class="col-sm-6 mb-2">
-                        <div class="border p-2 bg-light text-center">
-                            <b><?= $r_admin['nama_bank']; ?></b><br>
-                            <span class="text-primary font-weight-bold"><?= $r_admin['no_rekening']; ?></span><br>
-                            <small>a.n <?= $r_admin['atas_nama']; ?></small>
-                        </div>
-                    </div>
-                    <?php } ?>
-                  </div>
-
-                  <p class="mt-3">2. Setelah transfer, foto/screenshot struk dan unggah di bawah ini:</p>
-
-                  <!-- Input Hidden untuk diproses -->
-                  <input type="hidden" name="id_kucing" value="<?= $id_kucing; ?>">
-                  <input type="hidden" name="total_bayar" value="<?= $harga; ?>">
-
-                  <div class="form-group">
-                    <label>Upload Bukti Transfer (JPG/PNG)</label>
-                    <input type="file" name="bukti_transfer" class="form-control" accept="image/*" required>
-                  </div>
-                  
-                </div>
-                <div class="card-footer">
-                  <a href="index.php" class="btn btn-default">Batal</a>
-                  <button type="submit" name="btn-beli" class="btn btn-success float-right" onclick="return confirm('Apakah Anda yakin data transfer sudah benar?')">Beli & Konfirmasi Pembayaran</button>
-                </div>
-              </form>
-            </div>
           </div>
 
         </div>

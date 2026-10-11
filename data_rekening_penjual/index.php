@@ -1,6 +1,13 @@
 <?php
 require_once '../database/koneksi.php';
 
+// PROTEKSI HALAMAN: Pastikan hanya Penjual (PJ) yang bisa mengakses halaman ini
+$peran = trim($_SESSION['role'] ?? '');
+if ($peran != 'PJ') {
+    echo '<script>window.location.href="../logout.php"</script>';
+    exit;
+}
+
 $halaman = 'data_rekening';
 $id_penjual = $_SESSION['id_user']; 
 ?>
@@ -59,10 +66,6 @@ include '../library.php';
                 <h3 class="card-title">Data Rekening Bank / E-Wallet Saya</h3>
               </div>
               <div class="card-body">
-                <!-- <div class="alert alert-info alert-dismissible">
-                  <h5><i class="icon fas fa-info"></i> Info Penting!</h5>
-                  Pastikan nama pada rekening sesuai dengan KTP Anda. Rekening ini akan digunakan oleh Admin untuk mentransfer hasil penjualan Anda.
-                </div> -->
 
                 <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modal-tambah"><i class="fas fa-plus"></i> Tambah Rekening</button>
                 
@@ -78,7 +81,7 @@ include '../library.php';
                   </thead>
                   <tbody>
                     <?php 
-                    $query_rek = mysqli_query($db, "SELECT * FROM rekening_penjual WHERE id_penjual = '$id_penjual' ORDER BY id_rek_penjual DESC") or die (mysqli_error($db));
+                    $query_rek = mysqli_query($db, "SELECT * FROM rekening_penjual WHERE id_penjual = '$id_penjual'") or die (mysqli_error($db));
 
                     $rv = mysqli_num_rows($query_rek);
                     if ($rv > 0) {
@@ -114,6 +117,90 @@ include '../library.php';
                 </table>
               </div>
             </div>
+
+            <!-- Bagian Menampilkan Saldo & Riwayat Pendapatan Penjual -->
+            <?php
+            // Mengambil saldo aktual dari tabel users
+            $q_saldo = mysqli_query($db, "SELECT saldo FROM users WHERE id_user = '$id_penjual'");
+            $d_saldo = mysqli_fetch_assoc($q_saldo);
+            $saldo_saat_ini = $d_saldo['saldo'] ?? 0;
+            ?>
+            <div class="row mt-4">
+              <!-- Kotak Total Saldo di Kiri -->
+              <div class="col-lg-4 col-12">
+                <div class="small-box bg-info">
+                  <div class="inner">
+                    <h3>Rp <?= number_format($saldo_saat_ini, 0, ',', '.'); ?></h3>
+                    <p>Total Saldo Saya</p>
+                  </div>
+                  <div class="icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                  </div>
+                  <a href="../penarikan_dana" class="small-box-footer">
+                    Tarik Dana Sekarang <i class="fas fa-arrow-circle-right"></i>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Tabel Riwayat Pendapatan Masuk (90%) di Kanan -->
+              <div class="col-lg-8 col-12">
+                <div class="card card-outline card-info">
+                  <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-list"></i> Riwayat Pendapatan Masuk (90%)</h3>
+                  </div>
+                  <div class="card-body table-responsive p-0" style="max-height: 300px;">
+                    <table class="table table-head-fixed text-nowrap table-striped">
+                      <thead>
+                        <tr>
+                          <th>Tanggal</th>
+                          <th>Nama Kucing</th>
+                          <th>Pembeli</th>
+                          <th>Masuk ke Saldo (90%)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <?php
+                        // Mengambil transaksi yang statusnya mutlak 'Selesai' khusus untuk kucing milik penjual ini (Tanpa ORDER BY)
+                        $q_riwayat = mysqli_query($db, "SELECT * FROM transaksi WHERE status_transaksi = 'Selesai' AND id_kucing IN (SELECT id_kucing FROM kucing WHERE id_penjual = '$id_penjual')") or die (mysqli_error($db));
+                        
+                        if (mysqli_num_rows($q_riwayat) > 0) {
+                            while ($riwayat = mysqli_fetch_array($q_riwayat)) {
+                                $tgl = $riwayat['tanggal_transaksi'];
+                                $id_k = $riwayat['id_kucing'];
+                                $id_p = $riwayat['id_pembeli'];
+                                $total = $riwayat['total_bayar'];
+                                // Hitung 90% dari total bayar
+                                $pendapatan = (int)($total * 0.90);
+
+                                // Ambil nama kucing
+                                $q_nk = mysqli_query($db, "SELECT nama_kucing FROM kucing WHERE id_kucing = '$id_k'");
+                                $d_nk = mysqli_fetch_assoc($q_nk);
+                                $nama_k = $d_nk['nama_kucing'] ?? 'Kucing Dihapus';
+
+                                // Ambil nama pembeli
+                                $q_np = mysqli_query($db, "SELECT nama FROM users WHERE id_user = '$id_p'");
+                                $d_np = mysqli_fetch_assoc($q_np);
+                                $nama_p = $d_np['nama'] ?? 'Tidak Dikenal';
+                                ?>
+                                <tr>
+                                  <td><?= date('d-m-Y H:i', strtotime($tgl)); ?></td>
+                                  <td><?= $nama_k; ?></td>
+                                  <td><?= $nama_p; ?></td>
+                                  <td class="text-success font-weight-bold">+ Rp <?= number_format($pendapatan, 0, ',', '.'); ?></td>
+                                </tr>
+                                <?php
+                            }
+                        } else {
+                            echo '<tr><td colspan="4" class="text-center text-muted">Belum ada pendapatan yang masuk dari pesanan selesai.</td></tr>';
+                        }
+                        ?>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
       </div>
     </div>
   </div>
